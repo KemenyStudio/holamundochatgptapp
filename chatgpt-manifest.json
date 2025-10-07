@@ -1,0 +1,15 @@
+{
+  "name": "Multi-Language Greeting Teacher",
+  "description": "Learn how to say hello in 20 different languages with pronunciations. Perfect for language learners!",
+  "version": "1.0.0",
+  "authentication": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://YOUR-APP-URL.onrender.com/openapi.json"
+  },
+  "logo_url": "https://YOUR-APP-URL.onrender.com/logo.png",
+  "contact_email": "support@yourdomain.com",
+  "legal_info_url": "https://yourdomain.com/legal"
+}
