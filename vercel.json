@@ -1,24 +1,31 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/",
-      "destination": "/api/index"
+      "src": "api/**/*.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/api/index"
     },
     {
-      "source": "/health",
-      "destination": "/api/health"
+      "src": "/health",
+      "dest": "/api/health"
     },
     {
-      "source": "/mcp",
-      "destination": "/api/mcp"
+      "src": "/mcp",
+      "dest": "/api/mcp"
     },
     {
-      "source": "/mcp/tools",
-      "destination": "/api/tools"
+      "src": "/mcp/tools",
+      "dest": "/api/tools"
     },
     {
-      "source": "/api/mcp/tools",
-      "destination": "/api/tools"
+      "src": "/api/mcp/tools",
+      "dest": "/api/tools"
     }
   ]
 }
