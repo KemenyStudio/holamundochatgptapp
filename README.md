@@ -2,7 +2,7 @@
 
 A simple OpenAI ChatGPT app that teaches you how to say hello in 20 different languages.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_USERNAME/holamundochatgptapp)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KemenyStudio/holamundochatgptapp)
 
 > ⚡ **Quick Deploy**: Click the button above or see [DEPLOY_NOW.md](./DEPLOY_NOW.md) for one-click deployment!
 

@@ -4,9 +4,7 @@
 
 Click the button below to deploy this app to Vercel in seconds:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_USERNAME/holamundochatgptapp)
-
-> **Note**: Replace `YOUR_USERNAME` in the URL above with your actual GitHub username after you push the code.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KemenyStudio/holamundochatgptapp)
 
 ---
 
