@@ -134,11 +134,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           id: body.id,
           result: {
             protocolVersion: '2024-11-05',
-            capabilities: { tools: {} },
+            capabilities: { tools: {}, resources: {} },
             serverInfo: {
               name: 'Personal Counter & Notes',
               version: '3.0.0'
             }
+          }
+        });
+      }
+
+      if (body.method === 'resources/list') {
+        return res.status(200).json({
+          jsonrpc: '2.0',
+          id: body.id,
+          result: {
+            resources: []
           }
         });
       }
