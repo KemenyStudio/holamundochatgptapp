@@ -6,6 +6,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     message: 'Vercel deployment is working! 🎉',
     timestamp: new Date().toISOString(),
     method: req.method,
-    url: req.url
+    url: req.url,
+    note: 'Clean deployment - no framework overrides'
   });
 }
