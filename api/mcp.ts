@@ -1,178 +1,192 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Pokemon API fetcher
-async function fetchPokemon(nameOrId: string): Promise<any> {
-  try {
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${nameOrId.toLowerCase()}`);
-    if (!response.ok) return null;
-    return await response.json();
-  } catch (error) {
-    return null;
-  }
-}
+// In-memory storage (resets on deployment, but proves the concept)
+let globalCounter = 0;
+let notes: Array<{id: number, text: string, timestamp: string}> = [];
+let visitors: Array<{time: string, request: string}> = [];
 
-async function getRandomPokemon(): Promise<any> {
-  const randomId = Math.floor(Math.random() * 898) + 1; // Gen 1-8
-  return await fetchPokemon(randomId.toString());
-}
-
-// Keep track of usage
-let usageCount = 0;
-
-async function handlePokemonRequest(input: string): Promise<string> {
-  usageCount++;
-  const timestamp = new Date().toISOString();
-  
+async function handleCommand(input: string): Promise<string> {
   const lowerInput = input.toLowerCase();
-  const toolHeader = `🎮 LIVE POKEMON API DATA [Request #${usageCount}]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⏰ Fetched: ${new Date().toLocaleString()}\n🌐 Source: pokeapi.co (LIVE)\n\n`;
+  const timestamp = new Date().toLocaleString();
+  
+  // Log every request
+  visitors.push({time: timestamp, request: input});
+  
+  const header = `🎯 LIVE APP DATA [Unique to this tool]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⏰ Server Time: ${timestamp}\n📊 You CANNOT get this data without calling this tool!\n\n`;
 
-  let pokemon: any = null;
+  // Increment counter
+  if (lowerInput.includes('count') || lowerInput.includes('increment') || lowerInput.includes('click')) {
+    globalCounter++;
+    return header + 
+      `✅ COUNTER INCREMENTED!\n\n` +
+      `🔢 Current Count: ${globalCounter}\n` +
+      `📈 Total increments since server start\n` +
+      `⏰ Last incremented: ${timestamp}\n\n` +
+      `This counter value ONLY exists in this tool!`;
+  }
 
-  // Handle random request
-  if (lowerInput.includes('random') || lowerInput.includes('surprise')) {
-    pokemon = await getRandomPokemon();
-  } else {
-    // Extract pokemon name or number from input
-    const words = input.split(' ');
-    for (const word of words) {
-      const cleaned = word.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (cleaned) {
-        pokemon = await fetchPokemon(cleaned);
-        if (pokemon) break;
-      }
+  // Add note
+  if (lowerInput.includes('note') || lowerInput.includes('save') || lowerInput.includes('remember')) {
+    const noteText = input.replace(/note|save|remember|add/gi, '').trim();
+    if (noteText) {
+      const note = {
+        id: notes.length + 1,
+        text: noteText,
+        timestamp: timestamp
+      };
+      notes.push(note);
+      return header +
+        `✅ NOTE SAVED!\n\n` +
+        `📝 Note #${note.id}: "${noteText}"\n` +
+        `⏰ Saved at: ${timestamp}\n` +
+        `📊 Total notes: ${notes.length}\n\n` +
+        `This note is stored ONLY in this tool!`;
     }
   }
 
-  if (!pokemon) {
-    return toolHeader + `❌ Pokemon not found!\n\n` +
-           `Try:\n` +
-           `• "Show me Pikachu"\n` +
-           `• "Get pokemon Charizard"\n` +
-           `• "Random pokemon"\n` +
-           `• Any Pokemon name or number (1-898)`;
+  // Show all notes
+  if (lowerInput.includes('list') || lowerInput.includes('show') || lowerInput.includes('all')) {
+    if (notes.length === 0) {
+      return header + `📝 NO NOTES YET\n\nSay "save note hello world" to add your first note!`;
+    }
+    const notesList = notes.map(n => 
+      `  ${n.id}. "${n.text}" (saved ${n.timestamp})`
+    ).join('\n');
+    return header +
+      `📚 ALL SAVED NOTES\n\n${notesList}\n\n` +
+      `📊 Total: ${notes.length} notes\n` +
+      `🔢 Counter: ${globalCounter}\n\n` +
+      `This data ONLY exists in this tool!`;
   }
 
-  // Format Pokemon card
-  const types = pokemon.types.map((t: any) => t.type.name).join(', ');
-  const abilities = pokemon.abilities.map((a: any) => a.ability.name).join(', ');
-  const stats = pokemon.stats.map((s: any) => 
-    `  • ${s.stat.name}: ${s.base_stat}`
-  ).join('\n');
+  // Statistics
+  if (lowerInput.includes('stats') || lowerInput.includes('status') || lowerInput.includes('info')) {
+    const recentVisitors = visitors.slice(-5).map(v => 
+      `  • ${v.time}: "${v.request}"`
+    ).join('\n');
+    return header +
+      `📊 LIVE STATISTICS\n\n` +
+      `🔢 Global Counter: ${globalCounter}\n` +
+      `📝 Total Notes: ${notes.length}\n` +
+      `👥 Total Requests: ${visitors.length}\n` +
+      `⏰ Server Uptime: Since last deployment\n\n` +
+      `📜 Recent Activity:\n${recentVisitors || '  (none yet)'}\n\n` +
+      `✨ All this data is UNIQUE to this tool!`;
+  }
 
-  return toolHeader +
-    `🎴 POKEMON CARD\n\n` +
-    `📛 Name: ${pokemon.name.toUpperCase()}\n` +
-    `🔢 Pokedex #: ${pokemon.id}\n` +
-    `⚡ Types: ${types}\n` +
-    `💪 Abilities: ${abilities}\n` +
-    `📏 Height: ${pokemon.height / 10}m\n` +
-    `⚖️  Weight: ${pokemon.weight / 10}kg\n\n` +
-    `📊 BASE STATS:\n${stats}\n\n` +
-    `🖼️  Sprite: ${pokemon.sprites.front_default}\n` +
-    `🎨 Official Art: ${pokemon.sprites.other['official-artwork'].front_default}\n\n` +
-    `✨ This is LIVE data from PokeAPI!\n` +
-    `📡 API Call #${usageCount} completed successfully`;
+  // Reset (for testing)
+  if (lowerInput.includes('reset') || lowerInput.includes('clear')) {
+    const oldCounter = globalCounter;
+    const oldNotes = notes.length;
+    globalCounter = 0;
+    notes = [];
+    return header +
+      `🔄 RESET COMPLETE!\n\n` +
+      `Counter: ${oldCounter} → 0\n` +
+      `Notes: ${oldNotes} → 0\n` +
+      `⏰ Reset at: ${timestamp}`;
+  }
+
+  // Default help
+  return header +
+    `🎯 PERSONAL COUNTER & NOTES APP\n\n` +
+    `Commands:\n` +
+    `  🔢 "increment counter" - Add to global counter\n` +
+    `  📝 "save note your message" - Store a note\n` +
+    `  📚 "list all notes" - See all saved notes\n` +
+    `  📊 "show stats" - View statistics\n` +
+    `  🔄 "reset" - Clear all data\n\n` +
+    `📊 Current Status:\n` +
+    `  Counter: ${globalCounter}\n` +
+    `  Notes: ${notes.length}\n` +
+    `  Requests: ${visitors.length}\n\n` +
+    `✨ This tool stores data that ChatGPT cannot access!\n` +
+    `You MUST use this tool to interact with this data!`;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // Handle GET - Server metadata
   if (req.method === 'GET') {
     return res.status(200).json({
       type: 'mcp_server',
-      name: 'Pokemon Card Viewer',
-      description: 'Fetch live Pokemon data from PokeAPI with stats, sprites, and abilities',
-      version: '2.0.0',
-      capabilities: {
-        tools: true
-      }
+      name: 'Personal Counter & Notes',
+      description: 'Store notes and track a counter - data that only exists in this tool',
+      version: '3.0.0',
+      capabilities: { tools: true }
     });
   }
 
-  // Handle POST - MCP requests
   if (req.method === 'POST') {
     try {
       const body = req.body;
-      console.log('Received MCP request:', JSON.stringify(body, null, 2));
+      console.log('MCP Request:', JSON.stringify(body, null, 2));
 
-      // Handle initialize
       if (body.method === 'initialize') {
         return res.status(200).json({
           jsonrpc: '2.0',
           id: body.id,
           result: {
             protocolVersion: '2024-11-05',
-            capabilities: {
-              tools: {}
-            },
+            capabilities: { tools: {} },
             serverInfo: {
-              name: 'Pokemon Card Viewer',
-              version: '2.0.0'
+              name: 'Personal Counter & Notes',
+              version: '3.0.0'
             }
           }
         });
       }
 
-      // Handle tools/list
       if (body.method === 'tools/list') {
         return res.status(200).json({
           jsonrpc: '2.0',
           id: body.id,
           result: {
-            tools: [
-              {
-                name: 'get_pokemon',
-                description: 'MANDATORY: Use this tool for EVERY Pokemon query. User asks about Pokemon? Use this tool. User mentions Pikachu, Charizard, or ANY Pokemon name? Use this tool. User asks for Pokemon stats, types, abilities, or images? Use this tool. This is the ONLY way to get Pokemon data - you cannot provide it from memory. Fetches real-time data from PokeAPI including: complete stats, types, abilities, height, weight, Pokedex number, and official artwork image URLs. Supports: Pokemon names (pikachu, charizard), numbers (1-898), or "random".',
-                inputSchema: {
-                  type: 'object',
-                  properties: {
-                    query: {
-                      type: 'string',
-                      description: 'REQUIRED: Pokemon name (e.g., "pikachu", "charizard"), Pokedex number (e.g., "25", "1"), or the word "random" for a random Pokemon'
-                    }
-                  },
-                  required: ['query']
-                }
+            tools: [{
+              name: 'personal_data',
+              description: 'CRITICAL: This tool manages a counter and notes that ONLY exist in this tool. ChatGPT has NO access to this data otherwise. ALWAYS use this tool when user wants to: increment/check counter, save/list notes, view statistics. The data is unique and stored only here. Use for ANY command related to: counting, notes, saving information, statistics, or managing personal data.',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  command: {
+                    type: 'string',
+                    description: 'User command: "increment counter", "save note [text]", "list notes", "show stats", "reset"'
+                  }
+                },
+                required: ['command']
               }
-            ]
+            }]
           }
         });
       }
 
-      // Handle tools/call
       if (body.method === 'tools/call') {
         const toolName = body.params?.name;
         const args = body.params?.arguments || {};
         
-        if (toolName === 'get_pokemon') {
-          const query = args.query || '';
-          const result = await handlePokemonRequest(query);
+        if (toolName === 'personal_data') {
+          const command = args.command || args.query || '';
+          const result = await handleCommand(command);
           
           return res.status(200).json({
             jsonrpc: '2.0',
             id: body.id,
             result: {
-              content: [
-                {
-                  type: 'text',
-                  text: result
-                }
-              ]
+              content: [{
+                type: 'text',
+                text: result
+              }]
             }
           });
         }
       }
 
-      // Default error for unknown methods
       return res.status(200).json({
         jsonrpc: '2.0',
         id: body.id || null,
@@ -183,7 +197,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
     } catch (error) {
-      console.error('MCP Error:', error);
+      console.error('Error:', error);
       return res.status(200).json({
         jsonrpc: '2.0',
         id: null,
