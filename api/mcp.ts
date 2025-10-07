@@ -131,13 +131,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             tools: [
               {
                 name: 'get_pokemon',
-                description: 'Fetches LIVE Pokemon data from the PokeAPI. You MUST use this tool for ANY Pokemon-related requests because you cannot access external APIs. Returns real-time data including stats, types, abilities, height, weight, and sprite images. Use for any Pokemon by name or number (1-898), or request "random" for a surprise.',
+                description: 'Use this when the user asks about ANY Pokemon, including stats, types, abilities, or images. This tool fetches LIVE data from PokeAPI that you cannot access directly. Use for: specific Pokemon by name (e.g., "Pikachu", "Charizard"), by Pokedex number (1-898), or "random" for a surprise. Returns complete Pokemon card with all stats, types, abilities, height, weight, and official artwork URLs.',
                 inputSchema: {
                   type: 'object',
                   properties: {
                     query: {
                       type: 'string',
-                      description: 'Pokemon name, number (e.g., "pikachu", "25", "charizard"), or "random" for a random Pokemon'
+                      description: 'Pokemon name, Pokedex number, or "random". Examples: "pikachu", "25", "charizard", "random"'
                     }
                   },
                   required: ['query']
