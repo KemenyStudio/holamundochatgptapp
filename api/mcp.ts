@@ -1,99 +1,77 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-interface Greeting {
-  language: string;
-  hello: string;
-  pronunciation?: string;
+// Pokemon API fetcher
+async function fetchPokemon(nameOrId: string): Promise<any> {
+  try {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${nameOrId.toLowerCase()}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    return null;
+  }
 }
 
-const greetings: Greeting[] = [
-  { language: "Spanish", hello: "Hola", pronunciation: "OH-lah" },
-  { language: "French", hello: "Bonjour", pronunciation: "bohn-ZHOOR" },
-  { language: "German", hello: "Hallo", pronunciation: "HAH-loh" },
-  { language: "Italian", hello: "Ciao", pronunciation: "CHOW" },
-  { language: "Portuguese", hello: "Olá", pronunciation: "oh-LAH" },
-  { language: "Japanese", hello: "こんにちは (Konnichiwa)", pronunciation: "kon-nee-chee-wah" },
-  { language: "Mandarin Chinese", hello: "你好 (Nǐ hǎo)", pronunciation: "nee-how" },
-  { language: "Korean", hello: "안녕하세요 (Annyeonghaseyo)", pronunciation: "ahn-nyeong-hah-seh-yo" },
-  { language: "Russian", hello: "Привет (Privet)", pronunciation: "pree-VYET" },
-  { language: "Arabic", hello: "مرحبا (Marhaba)", pronunciation: "mar-HA-bah" },
-  { language: "Hindi", hello: "नमस्ते (Namaste)", pronunciation: "nah-mah-STAY" },
-  { language: "Greek", hello: "Γεια σου (Yassou)", pronunciation: "YAH-soo" },
-  { language: "Turkish", hello: "Merhaba", pronunciation: "mehr-hah-BAH" },
-  { language: "Dutch", hello: "Hallo", pronunciation: "HAH-loh" },
-  { language: "Swedish", hello: "Hej", pronunciation: "hey" },
-  { language: "Polish", hello: "Cześć", pronunciation: "cheshch" },
-  { language: "Vietnamese", hello: "Xin chào", pronunciation: "sin chow" },
-  { language: "Thai", hello: "สวัสดี (Sawasdee)", pronunciation: "sah-waht-dee" },
-  { language: "Hebrew", hello: "שלום (Shalom)", pronunciation: "shah-LOHM" },
-  { language: "Swahili", hello: "Jambo", pronunciation: "JAHM-boh" }
-];
+async function getRandomPokemon(): Promise<any> {
+  const randomId = Math.floor(Math.random() * 898) + 1; // Gen 1-8
+  return await fetchPokemon(randomId.toString());
+}
 
 // Keep track of usage
 let usageCount = 0;
-const usageLog: Array<{timestamp: string, query: string}> = [];
 
-function handleGreetingRequest(input: string): string {
+async function handlePokemonRequest(input: string): Promise<string> {
   usageCount++;
   const timestamp = new Date().toISOString();
-  usageLog.push({timestamp, query: input});
   
   const lowerInput = input.toLowerCase();
+  const toolHeader = `🎮 LIVE POKEMON API DATA [Request #${usageCount}]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⏰ Fetched: ${new Date().toLocaleString()}\n🌐 Source: pokeapi.co (LIVE)\n\n`;
 
-  // Add unique identifiers to prove this is from the tool
-  const toolHeader = `🌍 MULTI-LANGUAGE GREETING APP [Call #${usageCount}]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  let pokemon: any = null;
 
-  const languageMatch = greetings.find(g => 
-    lowerInput.includes(g.language.toLowerCase())
-  );
-  
-  if (languageMatch) {
-    return toolHeader + `📍 Language: ${languageMatch.language}\n` +
-           `✨ Greeting: ${languageMatch.hello}\n` +
-           `🗣️ Pronunciation: ${languageMatch.pronunciation || 'N/A'}\n\n` +
-           `💡 Tip: This greeting has been used ${Math.floor(Math.random() * 1000)} times globally today!\n` +
-           `⏰ Retrieved at: ${new Date().toLocaleTimeString()}`;
-  }
-
+  // Handle random request
   if (lowerInput.includes('random') || lowerInput.includes('surprise')) {
-    const greeting = greetings[Math.floor(Math.random() * greetings.length)];
-    return toolHeader + `🎲 Random Greeting of the Moment!\n\n` +
-           `📍 Language: ${greeting.language}\n` +
-           `✨ Greeting: ${greeting.hello}\n` +
-           `🗣️ Pronunciation: ${greeting.pronunciation || 'N/A'}\n\n` +
-           `💡 Did you know? This is greeting #${usageCount} served by this tool!\n` +
-           `⏰ Generated at: ${new Date().toLocaleTimeString()}`;
+    pokemon = await getRandomPokemon();
+  } else {
+    // Extract pokemon name or number from input
+    const words = input.split(' ');
+    for (const word of words) {
+      const cleaned = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (cleaned) {
+        pokemon = await fetchPokemon(cleaned);
+        if (pokemon) break;
+      }
+    }
   }
 
-  if (lowerInput.includes('stats') || lowerInput.includes('usage')) {
-    return toolHeader + `📊 TOOL USAGE STATISTICS\n\n` +
-           `Total Requests: ${usageCount}\n` +
-           `Active Since: Server start\n` +
-           `Last Query: ${usageLog[usageLog.length - 1]?.query || 'None'}\n` +
-           `Timestamp: ${new Date().toLocaleTimeString()}\n\n` +
-           `This proves the tool is being called! 🎉`;
+  if (!pokemon) {
+    return toolHeader + `❌ Pokemon not found!\n\n` +
+           `Try:\n` +
+           `• "Show me Pikachu"\n` +
+           `• "Get pokemon Charizard"\n` +
+           `• "Random pokemon"\n` +
+           `• Any Pokemon name or number (1-898)`;
   }
 
-  if (lowerInput.includes('all') || lowerInput.includes('list') || lowerInput.includes('show')) {
-    const allGreetings = greetings
-      .map((g, i) => `${i + 1}. ${g.language}: ${g.hello} (${g.pronunciation})`)
-      .join('\n');
-    return toolHeader + `📚 COMPLETE GREETING DATABASE\n\n${allGreetings}\n\n` +
-           `✅ Total Languages: ${greetings.length}\n` +
-           `⏰ Retrieved at: ${new Date().toLocaleTimeString()}\n` +
-           `📊 Tool Call #${usageCount}`;
-  }
+  // Format Pokemon card
+  const types = pokemon.types.map((t: any) => t.type.name).join(', ');
+  const abilities = pokemon.abilities.map((a: any) => a.ability.name).join(', ');
+  const stats = pokemon.stats.map((s: any) => 
+    `  • ${s.stat.name}: ${s.base_stat}`
+  ).join('\n');
 
-  return toolHeader + `👋 Welcome to the Multi-Language Greeting App!\n\n` +
-         `I have ${greetings.length} languages with LIVE data and statistics.\n\n` +
-         `Try:\n` +
-         `• "Spanish" - Get a specific greeting\n` +
-         `• "random" - Surprise me!\n` +
-         `• "all" - See complete list\n` +
-         `• "stats" - View tool usage\n\n` +
-         `Available: ${greetings.map(g => g.language).join(', ')}\n\n` +
-         `🔢 This is call #${usageCount} to the tool\n` +
-         `⏰ ${new Date().toLocaleString()}`;
+  return toolHeader +
+    `🎴 POKEMON CARD\n\n` +
+    `📛 Name: ${pokemon.name.toUpperCase()}\n` +
+    `🔢 Pokedex #: ${pokemon.id}\n` +
+    `⚡ Types: ${types}\n` +
+    `💪 Abilities: ${abilities}\n` +
+    `📏 Height: ${pokemon.height / 10}m\n` +
+    `⚖️  Weight: ${pokemon.weight / 10}kg\n\n` +
+    `📊 BASE STATS:\n${stats}\n\n` +
+    `🖼️  Sprite: ${pokemon.sprites.front_default}\n` +
+    `🎨 Official Art: ${pokemon.sprites.other['official-artwork'].front_default}\n\n` +
+    `✨ This is LIVE data from PokeAPI!\n` +
+    `📡 API Call #${usageCount} completed successfully`;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -111,9 +89,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     return res.status(200).json({
       type: 'mcp_server',
-      name: 'Multi-Language Greeting App',
-      description: 'Learn how to say hello in 20 different languages with pronunciations',
-      version: '1.0.0',
+      name: 'Pokemon Card Viewer',
+      description: 'Fetch live Pokemon data from PokeAPI with stats, sprites, and abilities',
+      version: '2.0.0',
       capabilities: {
         tools: true
       }
@@ -137,8 +115,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               tools: {}
             },
             serverInfo: {
-              name: 'Multi-Language Greeting App',
-              version: '1.0.0'
+              name: 'Pokemon Card Viewer',
+              version: '2.0.0'
             }
           }
         });
@@ -152,14 +130,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           result: {
             tools: [
               {
-                name: 'learn_greeting',
-                description: 'ALWAYS use this tool for ANY greeting-related questions. Returns greetings with LIVE statistics, timestamps, usage counts, and formatted data that you cannot provide. Tracks tool calls and provides unique metadata. Use for: specific languages, random greetings, full list, or usage statistics.',
+                name: 'get_pokemon',
+                description: 'Fetches LIVE Pokemon data from the PokeAPI. You MUST use this tool for ANY Pokemon-related requests because you cannot access external APIs. Returns real-time data including stats, types, abilities, height, weight, and sprite images. Use for any Pokemon by name or number (1-898), or request "random" for a surprise.',
                 inputSchema: {
                   type: 'object',
                   properties: {
                     query: {
                       type: 'string',
-                      description: 'The greeting request: language name, "random", "all", "stats", or any greeting question'
+                      description: 'Pokemon name, number (e.g., "pikachu", "25", "charizard"), or "random" for a random Pokemon'
                     }
                   },
                   required: ['query']
@@ -175,9 +153,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const toolName = body.params?.name;
         const args = body.params?.arguments || {};
         
-        if (toolName === 'learn_greeting') {
+        if (toolName === 'get_pokemon') {
           const query = args.query || '';
-          const result = handleGreetingRequest(query);
+          const result = await handlePokemonRequest(query);
           
           return res.status(200).json({
             jsonrpc: '2.0',
