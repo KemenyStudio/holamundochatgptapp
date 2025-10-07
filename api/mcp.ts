@@ -172,52 +172,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         
         if (toolName === 'personal_data') {
           const command = args.command || args.query || '';
-          await handleCommand(command);
-          
-          // Read the bundled component
-          const fs = await import('fs');
-          const path = await import('path');
-          const componentCode = fs.readFileSync(
-            path.join(process.cwd(), 'web/dist/component.js'),
-            'utf-8'
-          );
+          const result = await handleCommand(command);
           
           return res.status(200).json({
             jsonrpc: '2.0',
             id: body.id,
             result: {
               content: [{
-                type: 'ui_component',
-                component: {
-                  type: 'inline',
-                  html: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="module">
-    window.openai = {
-      toolOutput: {
-        counter: ${globalCounter},
-        notes: ${JSON.stringify(notes)},
-        visitors: ${visitors.length}
-      },
-      callTool: async (toolName, args) => {
-        console.log('callTool:', toolName, args);
-      },
-      theme: 'light'
-    };
-    ${componentCode}
-  </script>
-</body>
-</html>`
-                }
+                type: 'text',
+                text: result
               }]
             }
           });
