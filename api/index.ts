@@ -10,8 +10,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  // Return HTML landing page
-  return res.status(200).send(`
+  // Simple HTML response
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -173,6 +173,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
             });
     </script>
 </body>
-</html>
-  `);
+</html>`;
+
+  return res.status(200).setHeader('Content-Type', 'text/html').send(html);
 }
