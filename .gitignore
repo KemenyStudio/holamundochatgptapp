@@ -5,6 +5,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Web component build
+web/node_modules/
+web/dist/
+
 # Build outputs
 dist/
 build/

@@ -25,7 +25,7 @@ Click the button below to deploy this app to Vercel in seconds:
 3. Click **"Add New App"**
 4. Enter your MCP endpoint:
    ```
-   https://your-project-name.vercel.app/mcp
+   https://holamundochatgptapp.vercel.app/mcp
    ```
 5. **Authorize** and start using!
 
