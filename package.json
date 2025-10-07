@@ -9,7 +9,6 @@
     "start": "tsx app.ts",
     "server": "tsx server.ts",
     "server:dev": "tsx watch server.ts",
-    "build": "tsc",
     "docker:build": "docker build -t multilang-greeting-app .",
     "docker:run": "docker run -p 3000:3000 multilang-greeting-app"
   },
