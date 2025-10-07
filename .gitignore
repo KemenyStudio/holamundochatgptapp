@@ -7,7 +7,8 @@ pnpm-debug.log*
 
 # Web component build
 web/node_modules/
-web/dist/
+# Keep web/dist/ for deployment
+# web/dist/
 
 # Build outputs
 dist/
