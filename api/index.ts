@@ -1,0 +1,178 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // Return HTML landing page
+  return res.status(200).send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Language Greeting App 🌍</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        
+        .info {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .info h3 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        
+        .endpoint {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+            word-break: break-all;
+        }
+        
+        .features {
+            margin: 20px 0;
+        }
+        
+        .features li {
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .cta {
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .cta:hover {
+            transform: translateY(-2px);
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="badge">✨ Live & Running</div>
+        <h1>🌍 Multi-Language Greeting App</h1>
+        <p class="subtitle">Learn how to say hello in 20 different languages</p>
+        
+        <div class="info">
+            <h3>🚀 API Endpoints</h3>
+            <div class="endpoint">GET /api/health</div>
+            <div class="endpoint">POST /api/mcp</div>
+            <div class="endpoint">GET /api/tools</div>
+        </div>
+        
+        <div class="features">
+            <h3>Features:</h3>
+            <ul>
+                <li>20 languages with native scripts</li>
+                <li>Pronunciation guides for each greeting</li>
+                <li>Random greeting generator</li>
+                <li>ChatGPT integration ready</li>
+                <li>Instant responses</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <h3>🔗 Connect to ChatGPT</h3>
+            <p>Use this MCP endpoint in ChatGPT:</p>
+            <div class="endpoint" id="mcpUrl">Loading...</div>
+        </div>
+        
+        <a href="https://github.com/KemenyStudio/holamundochatgptapp" class="cta">View Documentation</a>
+    </div>
+    
+    <script>
+        // Set the MCP URL dynamically
+        document.getElementById('mcpUrl').textContent = window.location.origin + '/api/mcp';
+        
+        // Test health endpoint
+        fetch('/api/health')
+            .then(r => r.json())
+            .then(data => {
+                console.log('✅ Health check passed:', data);
+            })
+            .catch(err => {
+                console.error('❌ Health check failed:', err);
+            });
+    </script>
+</body>
+</html>
+  `);
+}
