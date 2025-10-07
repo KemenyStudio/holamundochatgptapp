@@ -74,13 +74,39 @@ Available languages: ${greetings.map(g => g.language).join(', ')}`;
 }
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS
+  // Enable CORS with all necessary headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Content-Type', 'application/json');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Handle GET requests for discovery/health
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      name: 'Multi-Language Greeting App',
+      description: 'Learn how to say hello in 20 different languages',
+      version: '1.0.0',
+      tools: [
+        {
+          name: 'learn_greeting',
+          description: 'Learn how to say hello in different languages',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: {
+                type: 'string',
+                description: 'Ask about a specific language, request a random greeting, or list all greetings'
+              }
+            },
+            required: ['query']
+          }
+        }
+      ]
+    });
   }
 
   if (req.method !== 'POST') {
@@ -89,7 +115,35 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const request = req.body;
-    const query = request.params?.arguments?.query || '';
+    
+    // Handle different MCP method types
+    if (request.method === 'tools/list' || request.method === 'list_tools') {
+      return res.status(200).json({
+        jsonrpc: '2.0',
+        result: {
+          tools: [
+            {
+              name: 'learn_greeting',
+              description: 'Learn how to say hello in different languages. Supports 20 languages with pronunciations.',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  query: {
+                    type: 'string',
+                    description: 'Ask about a specific language, request a random greeting, or list all greetings'
+                  }
+                },
+                required: ['query']
+              }
+            }
+          ]
+        },
+        id: request.id || null
+      });
+    }
+
+    // Handle tool calls
+    const query = request.params?.arguments?.query || request.params?.query || '';
     const result = handleGreetingRequest(query);
 
     const response = {
